@@ -17,6 +17,7 @@
   <script>
     async function init() {
       window.pyodide = await loadPyodide();
+      console.log("Pyodide загружен!");
     }
     init();
 
@@ -26,21 +27,20 @@
       output.textContent = "⏳ Выполнение...";
 
       try {
-        // Перенаправляем стандартный вывод в io.StringIO()
-        await pyodide.runPythonAsync(`
-import io, sys
+        const fullCode = `
+import io, sys, contextlib
 sys.stdout = io.StringIO()
-`);
+try:
+    exec("""${code.replace(/"/g, '\\"')}""")
+except Exception as e:
+    print("Ошибка:", e)
+sys.stdout.getvalue()
+`;
 
-        // Выполняем пользовательский код
-        await pyodide.runPythonAsync(code);
-
-        // Получаем содержимое stdout
-        const result = await pyodide.runPythonAsync("sys.stdout.getvalue()");
-
-        output.textContent = result || "(нет вывода)";
+        const result = await pyodide.runPythonAsync(fullCode);
+        output.textContent = result.trim() || "(нет вывода)";
       } catch (e) {
-        output.textContent = "❌ Ошибка:\n" + e;
+        output.textContent = "❌ Ошибка JS:\n" + e;
       }
     }
   </script>
