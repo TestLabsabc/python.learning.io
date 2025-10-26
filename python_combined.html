@@ -24,9 +24,21 @@
       const code = document.getElementById("code").value;
       const output = document.getElementById("output");
       output.textContent = "⏳ Выполнение...";
+
       try {
-        const result = await pyodide.runPythonAsync(code);
-        output.textContent = result ?? "(нет вывода)";
+        // Перенаправляем стандартный вывод в io.StringIO()
+        await pyodide.runPythonAsync(`
+import io, sys
+sys.stdout = io.StringIO()
+`);
+
+        // Выполняем пользовательский код
+        await pyodide.runPythonAsync(code);
+
+        // Получаем содержимое stdout
+        const result = await pyodide.runPythonAsync("sys.stdout.getvalue()");
+
+        output.textContent = result || "(нет вывода)";
       } catch (e) {
         output.textContent = "❌ Ошибка:\n" + e;
       }
