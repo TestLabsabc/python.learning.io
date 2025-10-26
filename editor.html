@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Python Editor</title>
+</head>
+<body style="font-family:sans-serif;background:#f5f5f5;margin:0;padding:10px;">
+  <h3>Редактор кода</h3>
+  <textarea id="code" style="width:100%;height:200px;font-family:monospace;font-size:14px;border-radius:8px;padding:10px;border:1px solid #ccc;">print("Привет, мир!")</textarea>
+  <br><br>
+  <button onclick="runCode()" style="background:#007bff;color:white;border:none;padding:10px 20px;border-radius:8px;cursor:pointer;">▶ Запустить</button>
+
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.24.1/full/pyodide.js"></script>
+  <script>
+    async function init() {
+      window.pyodide = await loadPyodide();
+    }
+    init();
+
+    async function runCode() {
+      const code = document.getElementById("code").value;
+      try {
+        const result = await pyodide.runPythonAsync(code);
+        // Отправляем результат во второе окно (output.html)
+        parent.postMessage(result ?? "(нет вывода)", "*");
+      } catch (e) {
+        parent.postMessage("Ошибка:\n" + e, "*");
+      }
+    }
+  </script>
+</body>
+</html>
