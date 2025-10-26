@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Python Мини IDE (с выбором версии)</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 10px;
+    }
+    h3 { margin-bottom: 10px; }
+    .editor-container {
+      display: flex;
+      border: 1px solid #ccc;
+      border-radius: 8px;
+      background: white;
+      overflow: hidden;
+      max-height: 300px;
+    }
+    .line-numbers {
+      background: #eee;
+      color: #666;
+      padding: 10px 6px;
+      text-align: right;
+      user-select: none;
+      font-family: monospace;
+      line-height: 1.6em;
+      border-right: 1px solid #ccc;
+      white-space: pre;
+      overflow: hidden;
+    }
+    #code {
+      flex: 1;
+      border: none;
+      resize: none;
+      outline: none;
+      font-family: monospace;
+      font-size: 14px;
+      line-height: 1.5em;
+      padding: 10px;
+      height: 300px;
+      overflow: auto;
+      box-sizing: border-box;
+    }
+    button {
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 10px;
+    }
+    pre {
+      background: #000;
+      color: #0f0;
+      padding: 10px;
+      border-radius: 8px;
+      min-height: 100px;
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+    select {
+      margin-left: 10px;
+      padding: 5px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h3>Редактор кода (Python в браузере)</h3>
+  
+  <label>Выберите версию Python:
+    <select id="pythonVersion">
+      <option value="0.24.1">Python 3.12 (Pyodide 0.24.1)</option>
+      <option value="0.25.0">Python 3.13 (Pyodide 0.25.0)</option>
+      <option value="0.23.4">Python 3.11 (Pyodide 0.23.4)</option>
+    </select>
+  </label>
+  
+  <div class="editor-container">
+    <div class="line-numbers" id="lineNumbers">1</div>
+    <textarea id="code">print("Привет, мир!")</textarea>
+  </div>
+
+  <button id="runBtn" disabled>Загрузка Python...</button>
+
+  <h3>Вывод программы:</h3>
+  <pre id="output"></pre>
+
+  <script>
+    const textarea = document.getElementById("code");
+    const lineNumbers = document.getElementById("lineNumbers");
+    const output = document.getElementById("output");
+    const runBtn = document.getElementById("runBtn");
+    const versionSelect = document.getElementById("pythonVersion");
+
+    function updateLineNumbers() {
+      const lines = textarea.value.split("\n").length;
+      lineNumbers.textContent = Array.from({ length: lines }, (_, i) => i + 1).join("\n");
+    }
+    textarea.addEventListener("input", updateLineNumbers);
+    textarea.addEventListener("scroll", () => {
+      lineNumbers.scrollTop = textarea.scrollTop;
+    });
+    updateLineNumbers();
+
+    let pyodide = null;
+
+    async function loadPyodideVersion(version) {
+      runBtn.disabled = true;
+      runBtn.textContent = "⏳ Загружается Python " + version + "...";
+      output.textContent = "Загрузка Pyodide " + version + " ...";
+
+      const script = document.createElement("script");
+      script.src = `https://cdn.jsdelivr.net/pyodide/v${version}/full/pyodide.js`;
+
+      await new Promise((resolve, reject) => {
+        script.onload = resolve;
+        script.onerror = reject;
+        document.body.appendChild(script);
+      });
+
+      pyodide = await loadPyodide();
+      runBtn.disabled = false;
+      runBtn.textContent = "▶ Запустить";
+      output.textContent = "✅ Python " + pyodide.version + " загружен.";
+    }
+
+    versionSelect.addEventListener("change", async () => {
+      pyodide = null;
+      await loadPyodideVersion(versionSelect.value);
+    });
+
+    // Загружаем версию по умолчанию
+    loadPyodideVersion(versionSelect.value);
+
+    runBtn.addEventListener("click", async () => {
+      if (!pyodide) {
+        output.textContent = "❌ Pyodide ещё не загружен!";
+        return;
+      }
+      const code = textarea.value;
+      output.textContent = "⏳ Выполнение...";
+      try {
+        const wrapped = `
+import io, sys, traceback
+sys.stdout = io.StringIO()
+try:
+    exec(${JSON.stringify(code)})
+except Exception as e:
+    print("Ошибка:")
+    print(traceback.format_exc())
+sys.stdout.getvalue()
+`;
+        const result = await pyodide.runPythonAsync(wrapped);
+        output.textContent = result.trim() || "(нет вывода)";
+      } catch (e) {
+        output.textContent = "❌ Ошибка JS:\n" + e;
+      }
+    });
+  </script>
+</body>
+</html>
+
