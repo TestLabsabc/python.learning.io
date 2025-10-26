@@ -31,7 +31,7 @@
 import io, sys, contextlib
 sys.stdout = io.StringIO()
 try:
-    exec("""${code.replace(/"/g, '\\"')}""")
+    exec(${JSON.stringify(code)})
 except Exception as e:
     print("Ошибка:", e)
 sys.stdout.getvalue()
