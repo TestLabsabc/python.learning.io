@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -11,12 +10,12 @@
 
   <script>
     window.addEventListener("message", (event) => {
-      //  Проверяем, что сообщение пришло именно от Pyodide, а не от других скриптов
-      if (typeof event.data === "string" || typeof event.data === "number") {
-        document.getElementById("output").textContent = event.data;
+      const data = event.data;
+      // реагируем только на сообщения нашего редактора
+      if (data && data.source === "python-editor") {
+        document.getElementById("output").textContent = data.payload;
       }
     });
   </script>
 </body>
 </html>
-
