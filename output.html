@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -10,8 +11,12 @@
 
   <script>
     window.addEventListener("message", (event) => {
-      document.getElementById("output").textContent = event.data;
+      //  Проверяем, что сообщение пришло именно от Pyodide, а не от других скриптов
+      if (typeof event.data === "string" || typeof event.data === "number") {
+        document.getElementById("output").textContent = event.data;
+      }
     });
   </script>
 </body>
 </html>
+
