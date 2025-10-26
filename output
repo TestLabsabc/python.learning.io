@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Output</title>
+</head>
+<body style="font-family:monospace;background:black;color:#0f0;padding:10px;">
+  <h3 style="color:white;">Вывод программы:</h3>
+  <pre id="output"></pre>
+
+  <script>
+    window.addEventListener("message", (event) => {
+      document.getElementById("output").textContent = event.data;
+    });
+  </script>
+</body>
+</html>
