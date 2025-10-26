@@ -22,7 +22,8 @@
       try {
         const result = await pyodide.runPythonAsync(code);
         // Отправляем результат во второе окно (output.html)
-        parent.postMessage(result ?? "(нет вывода)", "*");
+        //parent.postMessage(result ?? "(нет вывода)", "*");
+        window.parent.postMessage(result ?? "(нет вывода)", "*");
         //window.top.postMessage(result ?? "(нет вывода)", "*");
       } catch (e) {
         parent.postMessage("Ошибка:\n" + e, "*");
